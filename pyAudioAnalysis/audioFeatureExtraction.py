@@ -4,6 +4,8 @@ import os
 import glob
 import numpy
 import math
+import bz2
+import pickle as cPickle
 from scipy.fftpack import fft
 from scipy.fftpack.realtransforms import dct
 import matplotlib.pyplot as plt
@@ -941,3 +943,16 @@ def mtFeatureExtractionToFileDir(dirName, midTermSize, midTermStep,
         mtFeatureExtractionToFile(f, midTermSize, midTermStep, shortTermSize,
                                   shortTermStep, outPath, storeStFeatures,
                                   storeToCSV, PLOT)
+
+def saveExtractedFeatures(inputFile, outPutFile, mtWin = 1.0, mtStep = 1.0, stWin = 0.050, stStep = 0.050):
+    [Fs, x] = audioBasicIO.readAudioFile(inputFile)        # read audio file and convert to mono
+    x = audioBasicIO.stereo2mono(x)
+
+    MidTermFeatures = mtFeatureExtraction(x, Fs, mtWin * Fs, mtStep * Fs, round(Fs * stWin), round(Fs * stStep))
+
+    with bz2.BZ2File(outPutFile, 'w') as f:
+        cPickle.dump(MidTermFeatures, f)
+
+def readSavedFeatures(inputFile):
+    with bz2.BZ2File(inputFile, 'r') as f:
+        return cPickle.load(f)
